@@ -55,34 +55,34 @@ try:
         received_str = receive_data()
         print(f"Received string: {received_str}")
 
-        command_args = ["./build/control"]
+        command = "./build/control"
 
         if received_str == "exit":
             break
         elif received_str == "up":
-            run_command(command_args + ["0", "0,3 1,10"])
+            run_command([command, "0", "0,3 1,10"])
             time.sleep(1)
-            run_command(command_args + ["0", "2,3 2,10"])
+            run_command([command, "0", "2,3 2,10"])
         elif received_str == "down":
-            run_command(command_args + ["0", "1,3 0,10"])
+            run_command([command, "0", "1,3 0,10"])
             time.sleep(1)
-            run_command(command_args + ["0", "2,3 2,10"])
+            run_command([command, "0", "2,3 2,10"])
         elif received_str == "forward":
-            run_command(command_args + ["0", "0,4 1,6"])
+            run_command([command, "0", "0,4 1,6"])
             time.sleep(1)
-            run_command(command_args + ["0", "2,4 2,6"])
+            run_command([command, "0", "2,4 2,6"])
         elif received_str == "backward":
-            run_command(command_args + ["0", "0,4 1,9"])
+            run_command([command, "0", "0,4 1,9"])
             time.sleep(1)
-            run_command(command_args + ["0", "2,4 2,9"])
+            run_command([command, "0", "2,4 2,9"])
         elif received_str == "left":
-            run_command(command_args + ["0", "0,4 1,7"])
+            run_command([command, "0", "0,4 1,7"])
             time.sleep(1)
-            run_command(command_args + ["0", "2,4 2,7"])
+            run_command([command, "0", "2,4 2,7"])
         elif received_str == "right":
-            run_command(command_args + ["0", "0,4 1,5"])
+            run_command([command, "0", "0,4 1,5"])
             time.sleep(1)
-            run_command(command_args + ["0", "2,4 2,5"])
+            run_command([command, "0", "2,4 2,5"])
         else:
             pass
 
