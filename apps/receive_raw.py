@@ -31,7 +31,7 @@ def receive_data():
     return bytes(received_bytes).decode()
 
 
-def run_command(cmd_args):
+def run_command(command_args):
     """
     Function to execute a given command.
     """
