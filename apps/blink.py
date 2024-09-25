@@ -12,13 +12,13 @@ def main():
         return
 
     # Command to turn on LEDs
-    # Example: "../build/control 0 "1,1 0,2""
+    # Example: "./build/control 0 "1,1 0,2""
     # where "1,1" is state "High" for half bridge pin 1, and "0,2" is state "Low" for half bridge pin 2
-    activate_leds_cmd = ["../build/control", "0", "1,1 0,2"]
+    activate_leds_cmd = ["./build/control", "0", "1,1 0,2"]
 
     # Command to turn off LEDs (all floating i.e., not connected)
-    # Example: "../build/control 0 "2,1 2,2""
-    deactivate_leds_cmd = ["../build/control", "0", "2,1 2,2"]
+    # Example: "./build/control 0 "2,1 2,2""
+    deactivate_leds_cmd = ["./build/control", "0", "2,1 2,2"]
 
     # Execute command to turn on the LEDs
     print("Turning on the LEDs...")

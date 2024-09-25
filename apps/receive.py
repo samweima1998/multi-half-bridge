@@ -48,7 +48,7 @@ try:
         print(f"Received string: {received_str}")
 
         # Split the received string to form the correct arguments for the subprocess function.
-        command_args = ["../build/control"] + received_str.split()
+        command_args = ["./build/control"] + received_str.split()
         run_command(command_args)
 
         time.sleep(1)
