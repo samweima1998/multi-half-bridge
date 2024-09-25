@@ -1,5 +1,7 @@
 import RPi.GPIO as GPIO
 import time
+import subprocess
+
 
 DATA_PIN = 17
 CLK_PIN = 19
@@ -29,10 +31,26 @@ def receive_data():
     return bytes(received_bytes).decode()
 
 
+def run_command(cmd_args):
+    """
+    Function to execute a given command.
+    """
+    try:
+        subprocess.run(cmd_args, check=True)
+        print("Command executed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while executing command: {e}")
+
+
 try:
     while True:
         received_str = receive_data()
         print(f"Received string: {received_str}")
+
+        # Split the received string to form the correct arguments for the subprocess function.
+        command_args = ["../build/control"] + received_str.split()
+        run_command(command_args)
+
         time.sleep(1)
 except KeyboardInterrupt:
     GPIO.cleanup()
