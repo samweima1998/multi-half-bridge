@@ -41,7 +41,7 @@ def run_command(cmd_args):
         pairs = " ".join(
             command_args[2:]
         )  # Join all pairs elements to form a single second argument
-        subprocess.run([command, cs_pin, pairs], check=True)
+        subprocess.run([command, cs_pin, '"{pairs}"'], check=True)
         print("Command executed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while executing command: {e}")
