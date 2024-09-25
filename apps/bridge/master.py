@@ -11,23 +11,30 @@ GPIO.setup(CLK_PIN, GPIO.OUT)
 
 
 def send_data(data):
-    # Convert integer to a byte string
-    byte_array = data.to_bytes(4, byteorder="big", signed=True)
+    # Convert the string data to bytes
+    bytes_data = data.encode()
 
-    for byte in byte_array:
-        for bit in "{:08b}".format(byte):
-            GPIO.output(DATA_PIN, int(bit))
-            GPIO.output(CLK_PIN, GPIO.HIGH)
-            time.sleep(0.01)
-            GPIO.output(CLK_PIN, GPIO.LOW)
-            time.sleep(0.01)
+    # Send the length of the bytes first
+    send_byte(len(bytes_data))
+
+    # Send each byte of the string
+    for byte in bytes_data:
+        send_byte(byte)
+
+
+def send_byte(byte):
+    for bit in "{:08b}".format(byte):  # Send each bit of the byte
+        GPIO.output(DATA_PIN, int(bit))
+        GPIO.output(CLK_PIN, GPIO.HIGH)
+        time.sleep(0.01)
+        GPIO.output(CLK_PIN, GPIO.LOW)
+        time.sleep(0.01)
 
 
 try:
     while True:
-        # Accept user input, convert it to integer and send
-        data = int(input("Enter an integer to send: "))
-        send_data(data)
+        user_input = input("Enter a string to send: ")
+        send_data(user_input)
         time.sleep(1)
 except KeyboardInterrupt:
     GPIO.cleanup()
