@@ -1,8 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 
-DATA_PIN = 18
-CLK_PIN = 24
+DATA_PIN = 15
+CLK_PIN = 17
 
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
