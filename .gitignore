@@ -28,7 +28,6 @@
 .vscode
 .pio
 .development
-/build/
 /downloads/
 /packages/
 
