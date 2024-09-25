@@ -15,3 +15,9 @@ sudo apt remove python3-rpi.gpio
 pip3 install rpi-lgpio --break-system-packages
 git clone https://github.com/tjbck/multi-half-bridge.git
 ```
+
+
+# PermissionError: [Errno 13] Permission denied: './build/control'
+```sh
+chmod +x ./build/control
+```
