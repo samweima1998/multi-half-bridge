@@ -36,7 +36,12 @@ def run_command(cmd_args):
     Function to execute a given command.
     """
     try:
-        subprocess.run(cmd_args, check=True)
+        command = command_args[0]
+        cs_pin = command_args[1]
+        pairs = " ".join(
+            command_args[2:]
+        )  # Join all pairs elements to form a single second argument
+        subprocess.run([command, cs_pin, pairs], check=True)
         print("Command executed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while executing command: {e}")
