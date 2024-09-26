@@ -19,3 +19,8 @@ make examples/control
 ```sh
 ../../../build/control
 ```
+
+
+```sh
+cd
+```

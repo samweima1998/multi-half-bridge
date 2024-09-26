@@ -12,6 +12,11 @@ class Command(BaseModel):
     args: str
 
 
+@app.get("/")
+def status():
+    return {"status": True}
+
+
 @app.post("/execute")
 def execute_command(command: Command):
     """
