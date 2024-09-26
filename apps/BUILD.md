@@ -13,10 +13,8 @@ After reboot:
 ```sh
 cd multi-half-bridge/src/framework/raspberrypi
 make clean
-make control/control
+make examples/control
 ```
-
-
 
 ```sh
 ../../../build/control
