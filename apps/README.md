@@ -12,6 +12,9 @@ pip3 install -r apps/requirements.txt
 
 # Run Server
 python apps/server.py
+
+
+
 ```
 
 # RPI 5

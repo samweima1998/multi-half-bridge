@@ -22,7 +22,7 @@ def execute_command(command: Command):
     """
     Endpoint to execute a given command via command line.
     """
-    command_args = ["./build/control", command.cs_pin + command.args]
+    command_args = ["./build/control", command.cs_pin, command.args]
 
     try:
         subprocess.run(command_args, check=True)
