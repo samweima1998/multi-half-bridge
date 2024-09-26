@@ -3,7 +3,15 @@
 ```sh
 sudo apt-get update
 sudo apt-get install git
+sudo apt-get install python3-pip
+
 git clone https://github.com/tjbck/multi-half-bridge.git
+
+cd multi-half-bridge
+pip3 install -r apps/requirements.txt
+
+# Run Server
+python apps/server.py
 ```
 
 # RPI 5
