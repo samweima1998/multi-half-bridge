@@ -26,11 +26,9 @@ def execute_command(command: Command):
 
     # Get current file's directory
     current_file_path = Path(__file__).resolve()
-    # Get the parent directory (one level up)
-    parent_dir = current_file_path.parent
 
     # Build the path to executable
-    control_executable = parent_dir / "build" / "control"
+    control_executable = current_file_path.parent.parent / "build" / "control"
 
     command_args = [str(control_executable), command.cs_pin, command.args]
 
