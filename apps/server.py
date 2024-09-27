@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import subprocess
 import uvicorn
+from pathlib import Path  # Import Path from pathlib
 
 
 app = FastAPI()
@@ -22,7 +23,16 @@ def execute_command(command: Command):
     """
     Endpoint to execute a given command via command line.
     """
-    command_args = ["./build/control", command.cs_pin, command.args]
+
+    # Get current file's directory
+    current_file_path = Path(__file__).resolve()
+    # Get the parent directory (one level up)
+    parent_dir = current_file_path.parent
+
+    # Build the path to executable
+    control_executable = parent_dir / "build" / "control"
+
+    command_args = [str(control_executable), command.cs_pin, command.args]
 
     try:
         subprocess.run(command_args, check=True)
