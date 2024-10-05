@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import subprocess
 import uvicorn
 from pathlib import Path  # Import Path from pathlib
-
+import asyncio
 
 app = FastAPI()
 
@@ -19,24 +19,21 @@ def status():
 
 
 @app.post("/execute")
-def execute_command(command: Command):
-    """
-    Endpoint to execute a given command via command line.
-    """
-
-    # Get current file's directory
+async def execute_command(command: Command):
     current_file_path = Path(__file__).resolve()
-
-    # Build the path to executable
     control_executable = current_file_path.parent.parent / "build" / "control"
-
     command_args = [str(control_executable), command.cs_pin, command.args]
 
-    try:
-        subprocess.run(command_args, check=True)
-        return {"status": True}
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    process = await asyncio.create_subprocess_exec(
+        *command_args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+
+    stdout, stderr = await process.communicate()
+
+    if process.returncode != 0:
+        raise HTTPException(status_code=400, detail=stderr.decode().strip())
+
+    return {"status": True, "output": stdout.decode().strip()}
 
 
 if __name__ == "__main__":
