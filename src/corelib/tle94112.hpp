@@ -153,6 +153,18 @@ class Tle94112
 		 */
 		void configHB(HalfBridge hb, HBState state, PWMChannel pwm, uint8_t activeFW);
 
+		/*! \brief sets the output state and the PWM channel for a halfbridge (only for passive freewheeling)
+		 *
+		 * \param hb    halfbridge which will be configured
+		 * \param state sets the output voltage to high, low or floating
+		 * \param pwm   selects a PWM channel for PWM output
+		 *
+		 * \see HalfBridge
+		 * \see HBState
+		 * \see PWMChannel
+		 */
+		void configChip(HalfBridge hb, HBState state, PWMChannel pwm);
+
 		/*! \brief sets the frequency and duty cycle for a PWM channel
 		 *
 		 * \param pwm       PWM channel which will be configured
@@ -320,6 +332,17 @@ class Tle94112
 		 */
 		void _configHB(uint8_t hb, uint8_t state, uint8_t pwm, uint8_t activeFW);
 
+		/*! \brief sets the output state and the PWM channel for a halfbridge
+		 *         automatically called by the public version of configHB
+		 *
+		 * \param hb       halfbridge which will be configured
+		 * \param state    sets the output voltage to high, low or floating
+		 * \param pwm      selects a PWM channel for PWM output
+		 * \param activeFW 1 for active freewheeling
+		 *                 0 for passive freewheeling (default)
+		 */
+		void _configChip(uint8_t hb, uint8_t state, uint8_t pwm);
+
 		/*! \brief sets the frequency and duty cycle for a PWM channel
 		 *         automatically called by the public version of configPWM
 		 *
@@ -362,6 +385,20 @@ class Tle94112
 		 * \see mCtrlRegData
 		 */
 		void writeReg(uint8_t reg, uint8_t mask, uint8_t shift, uint8_t data);
+
+		/*! \brief writes data bits to a control register of the TLE94112
+		 *
+		 * \param reg   control register number(mapping array index / CtrlRegisters constant) of the register
+		 * \param mask  mask for the bits that have to be written
+		 * \param shift data will be shifted left by this amount before masking. This is for the bit alignment of data
+		 * \param data  the data byte that has to be written. It will be shifted and masked before
+		 *
+		 * \see CtrlRegisters
+		 * \see TLE94112_NUM_CTRL_REGS
+		 * \see mCtrlRegAddresses
+		 * \see mCtrlRegData
+		 */
+		void multiWriteReg(uint8_t reg, uint8_t mask, uint8_t shift, uint8_t data);
 
 		/*! \brief reads one byte from a status register of the TLE94112
 		 *

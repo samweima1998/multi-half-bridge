@@ -20,6 +20,9 @@
 *.out
 *.app
 
+# Old versions
+old*
+
 .cproject
 .project
 .settings/

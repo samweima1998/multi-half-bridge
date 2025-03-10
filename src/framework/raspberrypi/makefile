@@ -65,13 +65,12 @@ $(BUILD_DIR)/%.o: $(WRAPPER_DIR)/%.cpp
 $(EXAMPLES): $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ)
 	@g++ -c $(CXXFLAGS) -o $(BUILD_DIR)/$(@F).o examples/$(@F).cpp $(CXX_INC)
 ifeq ($(PCAP), 0)
-	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/*.o -I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835
-	@echo 'Type "sudo $(BUILD_DIR)/$(@F)" to execute the example.'
+	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) -I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835
 else
-	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/*.o -I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835 -lcap
+	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) -I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835 -lcap
 	@sudo setcap cap_sys_rawio+ep $(BUILD_DIR)/$(@F)
-	@echo 'Type "$(BUILD_DIR)/$(@F)" to execute the example.'
 endif
+
 
 clean:
 	@rm -f $(BUILD_DIR)/*

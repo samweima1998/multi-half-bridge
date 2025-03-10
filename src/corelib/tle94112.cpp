@@ -130,6 +130,32 @@ void Tle94112::_configHB(uint8_t hb, uint8_t state, uint8_t pwm, uint8_t activeF
 	writeReg(reg, mask, shift, activeFW);
 }
 
+void Tle94112::configChip(HalfBridge hb, HBState state, PWMChannel pwm)
+{
+	_configChip(hb, state, pwm);
+}
+
+void Tle94112::_configChip(uint8_t hb, uint8_t state, uint8_t pwm)
+{
+
+    TLE94112_LOG_MSG(__FUNCTION__);
+
+	uint8_t reg = mHalfBridges[hb].stateReg;
+	uint8_t mask = mHalfBridges[hb].stateMask;
+	uint8_t shift = mHalfBridges[hb].stateShift;
+	multiWriteReg(reg, mask, shift, state);
+
+	// reg = mHalfBridges[hb].pwmReg;
+	// mask = mHalfBridges[hb].pwmMask;
+	// shift = mHalfBridges[hb].pwmShift;
+	// writeReg(reg, mask, shift, pwm);
+
+	// reg = mHalfBridges[hb].fwReg;
+	// mask = mHalfBridges[hb].fwMask;
+	// shift = mHalfBridges[hb].fwShift;
+	// writeReg(reg, mask, shift, activeFW);
+}
+
 void Tle94112::configPWM(PWMChannel pwm, PWMFreq freq, uint8_t dutyCycle)
 {
 	_configPWM(static_cast<uint8_t>(pwm),static_cast<uint8_t>(freq),dutyCycle );
@@ -299,7 +325,7 @@ void Tle94112::init(void)
 #define TLE94112_STATUS_INV_MASK    (Tle94112::TLE_POWER_ON_RESET)
 
 /*! \brief time in milliseconds to wait for chipselect signal raised */
-#define TLE94112_CS_RISETIME        2
+#define TLE94112_CS_RISETIME        1 //default was 2
 
 void Tle94112::writeReg(uint8_t reg, uint8_t mask, uint8_t shift, uint8_t data)
 {
@@ -319,6 +345,26 @@ void Tle94112::writeReg(uint8_t reg, uint8_t mask, uint8_t shift, uint8_t data)
 	sBus->transfer(toWrite,byte1);
 	cs->enable();
 	timer->delayMilli(TLE94112_CS_RISETIME);
+}
+
+void Tle94112::multiWriteReg(uint8_t reg, uint8_t mask, uint8_t shift, uint8_t data)
+{
+	uint8_t address = mCtrlRegAddresses[reg];
+	uint8_t toWrite = mCtrlRegData[reg] & (~mask);
+	uint8_t byte0;
+	uint8_t byte1;
+
+    TLE94112_LOG_MSG(__FUNCTION__);
+
+	toWrite |= (data << shift) & mask;
+	mCtrlRegData[reg] = toWrite;
+
+	address = address | TLE94112_CMD_WRITE
+	cs->disable();
+	sBus->transfer(address,byte0);
+	sBus->transfer(toWrite,byte1);
+	cs->enable();
+	//timer is moved up into main control code to prevent unnecessary delay
 }
 
 uint8_t Tle94112::readStatusReg(uint8_t reg)
