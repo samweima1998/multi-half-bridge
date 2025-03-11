@@ -23,6 +23,10 @@
 # Old versions
 old*
 
+# Svelte frontend, except build
+frontend/*
+!frontend/build/
+
 .cproject
 .project
 .settings/

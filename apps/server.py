@@ -191,11 +191,11 @@ async def shutdown_event():
 # def status():
 #     return {"status": "Server is running"}
 
-# Define the path to the static folder correctly
-svelte_frontend = current_file_path.parent.parent / "static"
+# Define the path to the frontend folder correctly
+svelte_frontend = current_file_path.parent.parent / "frontend"
 
 # Serve the static files (Svelte app)
-app.mount("/", StaticFiles(directory=svelte_frontend, html=True), name="static")
+app.mount("/", StaticFiles(directory=svelte_frontend, html=True), name="build")
 
 # Serve the Svelte index.html for the root route
 @app.get("/")

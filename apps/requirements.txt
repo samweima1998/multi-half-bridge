@@ -3,7 +3,5 @@ uvicorn[standard]
 pydantic
 python-multipart
 asyncio
-logging
 pathlib
 typing
-os
