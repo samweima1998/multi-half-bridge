@@ -63,7 +63,7 @@ class DotBatch(BaseModel):
 @app.post("/send_dots")
 async def receive_dots(batch: DotBatch):
     try:
-        dot_list = json.dumps([dot.dict() for dot in batch.dots])
+        dot_list = json.dumps([dot.model_dump() for dot in batch.dots])
         logging.info(f"Received dot list {dot_list}.")
         # The code below accounts for rotational symmetry in the physical PCB design
         for dot in batch.dots:
@@ -71,7 +71,7 @@ async def receive_dots(batch: DotBatch):
                 dot.number += 2
             if dot.index in {0,5,6,11,12,13,18,19,20,24,25,29}:
                 dot.number += 4
-        dot_list = json.dumps([dot.dict() for dot in batch.dots])
+        dot_list = json.dumps([dot.model_dump() for dot in batch.dots])
         logging.info(f"Processed dot list {dot_list}.")
     except Exception as e:
         return {"status": "error", "message": str(e)}
