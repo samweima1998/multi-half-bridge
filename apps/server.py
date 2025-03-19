@@ -71,6 +71,8 @@ async def receive_dots(batch: DotBatch):
                 dot.number += 2
             if dot.index in {0,5,6,11,12,13,18,19,20,24,25,29}:
                 dot.number += 4
+            if dot.number>6:
+                dot.number -= 6
         dot_list = json.dumps([dot.model_dump() for dot in batch.dots])
         logging.info(f"Processed dot list {dot_list}.")
     except Exception as e:
