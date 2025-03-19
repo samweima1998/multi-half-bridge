@@ -30,7 +30,7 @@ app.add_middleware(
 
 # Command models
 class Command(BaseModel):
-    cs_pin: str
+    cs_pin: int
     args: str
 
 class CommandBatch(BaseModel):
@@ -53,6 +53,26 @@ current_file_path = Path(__file__).resolve()
 control_executable = current_file_path.parent.parent / "build" / "control"
 stepper_executable = current_file_path.parent.parent / "build" / "stepperMotor"
 
+class DotData(BaseModel):
+    index: int
+    number: int
+
+class DotBatch(BaseModel):
+    dots: List[DotData]
+
+@app.post("/send_dots")
+async def receive_dots(batch: DotBatch):
+    try:
+        dot_list = json.dumps([dot.dict() for dot in batch.dots])
+
+
+
+
+        logging.info(f"Received dot list {dot_list}.")
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
 async def command_processor():
     global shutdown_flag
     process = None
@@ -202,8 +222,6 @@ async def shutdown_event():
 
 # Define the path to the frontend folder correctly
 svelte_frontend = current_file_path.parent.parent / "frontend" / "build"
-
-
 
 # Serve the Svelte index.html for the root route
 @app.get("/")
