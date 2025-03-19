@@ -1,4 +1,4 @@
-# RPI ZERO
+# RPI ZERO 2W
 
 Using Raspberri Pi Imager, install on a micro-SD card: 
     Raspberry Pi OS (Legacy , 32-bit) Bullseye with security updates and no desktop environment
@@ -12,18 +12,6 @@ Save and unmount:
     sudo umount /mnt/rpi-root
 Insert micro-SD into RPi Zero
 Boot (first boot may take some time)
-
-```sh
-sudo apt-get update
-sudo apt-get install git
-sudo apt-get install python3-pip
-
-git clone https://github.com/samweima1998/multi-half-bridge.git
-
-cd multi-half-bridge
-
-```
-# RPI ZERO
 
 ```sh
 #Open the sudoers file using the visudo command:
@@ -51,48 +39,18 @@ cd
 
 cd multi-half-bridge
 pip3 install -r apps/requirements.txt
-### still need to include static svelte page in github repo
-# Run Server
+
+# Test run Server
 python apps/server.py
-
-
-
+# Visit `http://<raspberrypi-ip>:7070` from a browser on the same network and check if it displays the web page
 ```
-
-# RPI 5
-
-```sh
-sudo apt-get update
-sudo raspi-config # Enable Remote GPIO
-sudo apt remove python3-rpi.gpio
-pip3 install rpi-lgpio --break-system-packages
-git clone https://github.com/samweima1998/multi-half-bridge.git
-```
-
-
-# PermissionError: [Errno 13] Permission denied: './build/control'
-```sh
-chmod +x ./build/control
-```
-
 # Auto Launch Server on Boot
-
 
 To have a Python server script launch automatically when your Raspberry Pi boots, you need to create a service that runs at startup. This can be achieved using `systemd`, which is the initialization system and service manager that is widely used in Linux distributions, including Raspberry Pi OS.
 
 Below are the steps to create a systemd service that will start your Python server when the Raspberry Pi boots:
 
-### Step 1: Create Your Python Server Script
-
-Make sure the server script works as expected by running:
-
-```bash
-python /home/pi/multi-half-bridge/apps/server.py
-```
-
-Visit `http://<raspberrypi-ip>:7070` from a browser on the same network and check if it displays { "status": True }
-
-### Step 3: Create a systemd Service File
+### Step 1: Create a systemd Service File
 
 1. Create a service file under `/etc/systemd/system/`. For example, name it `python_server.service`:
 ```bash
@@ -119,7 +77,7 @@ WantedBy=multi-user.target
 
 3. Save and exit the file (using CTRL+X, then Y and Enter in nano).
 
-### Step 4: Enable and Start the Service
+### Step 2: Enable and Start the Service
 
 1. Reload the systemd manager configuration:
 ```bash
@@ -136,7 +94,7 @@ sudo systemctl enable python_server.service
 sudo systemctl start python_server.service
 ```
 
-### Step 5: Check the Status of Your Service
+### Step 3: Check the Status of Your Service
 
 To ensure that the service is active and running, you can use:
 ```bash

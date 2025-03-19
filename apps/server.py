@@ -9,12 +9,24 @@ from typing import List
 import os
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+import subprocess
+import json
+from fastapi.middleware.cors import CORSMiddleware
+
 
 
 
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change "*" to your frontend URL for better security
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],  # Ensure POST is included
+    allow_headers=["*"],
+)
 
 # Command models
 class Command(BaseModel):
@@ -187,15 +199,11 @@ async def shutdown_event():
 
     logging.info("Subprocesses terminated successfully.")
 
-# @app.get("/")
-# def status():
-#     return {"status": "Server is running"}
 
 # Define the path to the frontend folder correctly
-svelte_frontend = current_file_path.parent.parent / "frontend"
+svelte_frontend = current_file_path.parent.parent / "frontend" / "build"
 
-# Serve the static files (Svelte app)
-app.mount("/", StaticFiles(directory=svelte_frontend, html=True), name="build")
+
 
 # Serve the Svelte index.html for the root route
 @app.get("/")
@@ -219,6 +227,9 @@ async def control_stepper(batch: StepperCommandBatch):
         await stepper_queue.put({"direction": cmd.direction, "steps": cmd.steps})
     return {"status": True, "results": results}
 
+# Serve the static files (Svelte app)
+# Ensure these files are mounted last, otherwise POST requests may fail
+app.mount("/", StaticFiles(directory=svelte_frontend, html=True), name="build")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=7070, log_level="info")
