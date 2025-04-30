@@ -107,6 +107,7 @@ If everything is set up correctly, your Python server should now automatically s
 
 If your server doesn't start properly, you can check the logs for errors:
 ```bash
-sudo journalctl -u python_server.service
+sudo journalctl -u python_server.service --no-pager | tail -n 50
+
 ```
 

@@ -51,7 +51,7 @@ shutdown_flag = False
 # Path to the control executable
 current_file_path = Path(__file__).resolve()
 control_executable = current_file_path.parent.parent / "build" / "control"
-stepper_executable = current_file_path.parent.parent / "build" / "stepperMotor"
+stepper_executable = current_file_path.parent.parent / "build" / "stepperMotorGPIO"
 
 class DotData(BaseModel):
     index: int
