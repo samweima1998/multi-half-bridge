@@ -3,21 +3,28 @@
 #include <sstream>
 #include <string>
 
-#define DIR_PIN RPI_GPIO_P1_11   // Replace with your actual DIR pin (e.g., GPIO17)
-#define STEP_PIN RPI_GPIO_P1_6  // Replace with your actual STEP pin (e.g., GPIO27)
+#define DIR_PIN 25       // BCM GPIO 11
+#define STEP_PIN 6       // BCM GPIO 6
+#define ENABLE_PIN 5     // BCM GPIO 5 (adjust to your actual pin)
 
 enum Direction { FORWARD, BACKWARD };
 
 void stepMotor(Direction dir, int steps) {
+    // Enable motor (active LOW)
+    bcm2835_gpio_write(ENABLE_PIN, LOW);
+
     // Set direction
     bcm2835_gpio_write(DIR_PIN, dir == FORWARD ? HIGH : LOW);
 
     for (int i = 0; i < steps; ++i) {
         bcm2835_gpio_write(STEP_PIN, HIGH);
-        bcm2835_delayMicroseconds(20); // 10-20 us high
+        bcm2835_delayMicroseconds(2000);
         bcm2835_gpio_write(STEP_PIN, LOW);
-        bcm2835_delayMicroseconds(1000); // Step interval (1ms = 1000Hz stepping)
+        bcm2835_delayMicroseconds(10000);
     }
+
+    // Disable motor after movement
+    bcm2835_gpio_write(ENABLE_PIN, HIGH);
 }
 
 int main() {
@@ -28,10 +35,18 @@ int main() {
 
     bcm2835_gpio_fsel(DIR_PIN, BCM2835_GPIO_FSEL_OUTP);
     bcm2835_gpio_fsel(STEP_PIN, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(ENABLE_PIN, BCM2835_GPIO_FSEL_OUTP);
+
+    // Initially disable motor
+    bcm2835_gpio_write(ENABLE_PIN, HIGH);
 
     std::string input;
     while (std::getline(std::cin, input)) {
-        if (input.empty()) continue;
+        if (input.empty()) {
+            // No command input, keep motor disabled
+            bcm2835_gpio_write(ENABLE_PIN, HIGH);
+            continue;
+        }
 
         std::istringstream input_stream(input);
         std::string direction_str;
@@ -55,6 +70,7 @@ int main() {
         std::cout << "SUCCESS: Moved " << steps << " steps in " << direction_str << " direction\nEND" << std::endl;
     }
 
+    bcm2835_gpio_write(ENABLE_PIN, HIGH);  // Ensure motor is disabled before exit
     bcm2835_close();
     return 0;
 }
