@@ -14,8 +14,6 @@ import json
 from fastapi.middleware.cors import CORSMiddleware
 
 
-
-
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
@@ -65,18 +63,57 @@ async def receive_dots(batch: DotBatch):
     try:
         dot_list = json.dumps([dot.model_dump() for dot in batch.dots])
         logging.info(f"Received dot list {dot_list}.")
-        # The code below accounts for rotational symmetry in the physical PCB design
+
         for dot in batch.dots:
-            if dot.index in {21,22,23,26,27,28,30,31,32,33,34,35}:
+            if dot.index in {21, 22, 23, 26, 27, 28, 30, 31, 32, 33, 34, 35}:
                 dot.number += 2
-            if dot.index in {0,5,6,11,12,13,18,19,20,24,25,29}:
+            if dot.index in {0, 5, 6, 11, 12, 13, 18, 19, 20, 24, 25, 29}:
                 dot.number += 4
-            if dot.number>6:
+            if dot.number > 6:
                 dot.number -= 6
-        dot_list = json.dumps([dot.model_dump() for dot in batch.dots])
-        logging.info(f"Processed dot list {dot_list}.")
+
+        processed_list = [dot.model_dump() for dot in batch.dots]
+        logging.info(f"Processed dot list {json.dumps(processed_list)}.")
+
+        # Stepper command 1
+        result_future1 = asyncio.get_running_loop().create_future()
+        await stepper_queue.put({"direction": "BACKWARD", "steps": 20000, "result": result_future1})
+        await result_future1
+        logging.info("Stepper BACKWARD complete.")
+
+        # Run command after BACKWARD
+        for cmd in batch.dots:
+            result_future = asyncio.get_running_loop().create_future()
+            await command_queue.put({
+                "cs_pin": "4",
+                "args": "2,1 2,2 2,3 2,4 2,5 2,6 2,7 2,8 2,9 2,10 2,11 2,12",
+                "result": result_future
+            })
+            await result_future
+
+        # Stepper command 2
+        result_future2 = asyncio.get_running_loop().create_future()
+        await stepper_queue.put({"direction": "FORWARD", "steps": 20000, "result": result_future2})
+        await result_future2
+        logging.info("Stepper FORWARD complete.")
+
+        # Run command after FORWARD
+        for cmd in batch.dots:
+            result_future = asyncio.get_running_loop().create_future()
+            await command_queue.put({
+                "cs_pin": "4",
+                "args": "0,1 0,2 0,3 0,4 0,5 0,6 0,7 0,8 0,9 0,10 0,11 0,12",
+                "result": result_future
+            })
+            await result_future
+
+        return {"status": "success", "dots": processed_list}
+
     except Exception as e:
+        logging.error(f"Error in /send_dots: {e}")
         return {"status": "error", "message": str(e)}
+
+    
     
 async def command_processor():
     global shutdown_flag
@@ -166,6 +203,7 @@ async def stepper_processor():
                         raise RuntimeError("Stepper subprocess terminated unexpectedly.")
                     
                     command = await asyncio.wait_for(stepper_queue.get(), timeout=1.0)
+                    result_future = command.get("result")
                     command_input = f"{command['direction']} {command['steps']}\n"
 
                     if process.returncode is not None:
@@ -173,6 +211,20 @@ async def stepper_processor():
 
                     process.stdin.write(command_input.encode())
                     await process.stdin.drain()
+                    
+                    # Wait for 'DONE' confirmation from C++ process
+                    while True:
+                        line = await process.stdout.readline()
+                        if not line:
+                            break
+                        decoded = line.decode().strip()
+                        logging.info(f"Stepper subprocess output: {decoded}")
+                        if decoded == "DONE":
+                            break
+
+                    # Signal completion
+                    if result_future:
+                        result_future.set_result(True)
                 except asyncio.TimeoutError:
                     pass
                 except Exception as e:

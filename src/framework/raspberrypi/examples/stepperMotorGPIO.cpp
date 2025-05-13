@@ -18,13 +18,14 @@ void stepMotor(Direction dir, int steps) {
 
     for (int i = 0; i < steps; ++i) {
         bcm2835_gpio_write(STEP_PIN, HIGH);
-        bcm2835_delayMicroseconds(2000);
+        bcm2835_delayMicroseconds(20);
         bcm2835_gpio_write(STEP_PIN, LOW);
-        bcm2835_delayMicroseconds(10000);
+        bcm2835_delayMicroseconds(100);
     }
 
     // Disable motor after movement
-    bcm2835_gpio_write(ENABLE_PIN, HIGH);
+    // bcm2835_delay(500);  // Let motor hold position for 0.5 sec
+    // bcm2835_gpio_write(ENABLE_PIN, HIGH);
 }
 
 int main() {
@@ -67,7 +68,9 @@ int main() {
 
         stepMotor(dir, steps);
 
-        std::cout << "SUCCESS: Moved " << steps << " steps in " << direction_str << " direction\nEND" << std::endl;
+        // Report status to server
+        std::cout << "SUCCESS: Moved " << steps << " steps in " << direction_str << " direction" << std::endl;
+        std::cout << "DONE" << std::endl;
     }
 
     bcm2835_gpio_write(ENABLE_PIN, HIGH);  // Ensure motor is disabled before exit
