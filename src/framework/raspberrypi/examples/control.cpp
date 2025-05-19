@@ -44,7 +44,10 @@ int main()
     }
     std::cout << "READY\n"
               << std::flush;
-
+    if (!bcm2835_init()) {
+        std::cerr << "ERROR: Failed to initialize bcm2835" << std::flush;
+        return 1;
+    }
     std::string input;
     while (std::getline(std::cin, input)) // Read commands from stdin
     {
@@ -95,10 +98,12 @@ int main()
                 std::cout << "ERROR: Invalid state or half-bridge pin in pair: " << pair << "\nEND\n"
                           << std::flush;
                 error = true;
+                bcm2835_gpio_write(4, LOW);
                 break;
             }
 
             controllers[csPinIndex].configChip(hbPins[hbPin], states[state], Tle94112::TLE_NOPWM);
+            
 
         }
 
@@ -106,6 +111,7 @@ int main()
         {
             std::cout << "SUCCESS: Command processed for CS" << csPinIndex << "\nEND\n"
                       << std::flush;
+            bcm2835_gpio_write(4, HIGH);
         }
         controllers[csPinIndex].timer->delayMilli(1); /*! \brief time in milliseconds to wait for chipselect signal raised */
     }

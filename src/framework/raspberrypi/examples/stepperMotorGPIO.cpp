@@ -1,51 +1,56 @@
-#include <bcm2835.h>
+#include <gpiod.h>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <thread>
+#include <chrono>
 
-#define DIR_PIN 25       // BCM GPIO 11
-#define STEP_PIN 6       // BCM GPIO 6
-#define ENABLE_PIN 5     // BCM GPIO 5 (adjust to your actual pin)
+#define CHIP_NAME "gpiochip0" // Typical on Raspberry Pi
+#define DIR_PIN 25
+#define STEP_PIN 6
+#define ENABLE_PIN 5
 
 enum Direction { FORWARD, BACKWARD };
 
-void stepMotor(Direction dir, int steps) {
-    // Enable motor (active LOW)
-    bcm2835_gpio_write(ENABLE_PIN, LOW);
-
-    // Set direction
-    bcm2835_gpio_write(DIR_PIN, dir == FORWARD ? HIGH : LOW);
-
+void pulseStepPin(gpiod_line* step_line, int steps) {
     for (int i = 0; i < steps; ++i) {
-        bcm2835_gpio_write(STEP_PIN, HIGH);
-        bcm2835_delayMicroseconds(20);
-        bcm2835_gpio_write(STEP_PIN, LOW);
-        bcm2835_delayMicroseconds(100);
+        gpiod_line_set_value(step_line, 1);
+        std::this_thread::sleep_for(std::chrono::microseconds(20));
+        gpiod_line_set_value(step_line, 0);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
-
-    // Disable motor after movement
-    // bcm2835_delay(500);  // Let motor hold position for 0.5 sec
-    // bcm2835_gpio_write(ENABLE_PIN, HIGH);
 }
 
 int main() {
-    if (!bcm2835_init()) {
-        std::cerr << "ERROR: Failed to initialize bcm2835\n";
+
+    // Set up libgpiod chip and lines
+    gpiod_chip* chip = gpiod_chip_open_by_name(CHIP_NAME);
+    if (!chip) {
+        std::cerr << "ERROR: Failed to open GPIO chip" << std::endl;
         return 1;
     }
 
-    bcm2835_gpio_fsel(DIR_PIN, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(STEP_PIN, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(ENABLE_PIN, BCM2835_GPIO_FSEL_OUTP);
+    gpiod_line* dir_line = gpiod_chip_get_line(chip, DIR_PIN);
+    gpiod_line* step_line = gpiod_chip_get_line(chip, STEP_PIN);
+    gpiod_line* enable_line = gpiod_chip_get_line(chip, ENABLE_PIN);
 
-    // Initially disable motor
-    bcm2835_gpio_write(ENABLE_PIN, HIGH);
+    if (!dir_line || !step_line || !enable_line) {
+        std::cerr << "ERROR: Failed to access one or more GPIO lines" << std::endl;
+        return 1;
+    }
+
+    // Request all lines as outputs
+    if (gpiod_line_request_output(dir_line, "stepper", 0) ||
+        gpiod_line_request_output(step_line, "stepper", 0) ||
+        gpiod_line_request_output(enable_line, "stepper", 1)) {
+        std::cerr << "ERROR: Failed to request GPIO lines as outputs" << std::endl;
+        return 1;
+    }
 
     std::string input;
     while (std::getline(std::cin, input)) {
         if (input.empty()) {
-            // No command input, keep motor disabled
-            bcm2835_gpio_write(ENABLE_PIN, HIGH);
+            gpiod_line_set_value(enable_line, 1); // disable motor
             continue;
         }
 
@@ -54,7 +59,9 @@ int main() {
         int steps;
 
         if (!(input_stream >> direction_str >> steps)) {
-            std::cout << "ERROR: Invalid command format\nEND" << std::endl;
+            std::cout << "ERROR: Invalid command format" << std::endl;
+            std::cout << "DONE" << std::endl;
+            std::cout.flush();
             continue;
         }
 
@@ -62,18 +69,28 @@ int main() {
         if (direction_str == "FORWARD") dir = FORWARD;
         else if (direction_str == "BACKWARD") dir = BACKWARD;
         else {
-            std::cout << "ERROR: Invalid direction\nEND" << std::endl;
+            std::cout << "ERROR: Invalid direction" << std::endl;
+            std::cout << "DONE" << std::endl;
+            std::cout.flush();
             continue;
         }
+        std::cout << "Got line: \"" << direction_str << "\"" << std::endl;
+        std::cout.flush();
 
-        stepMotor(dir, steps);
+        gpiod_line_set_value(enable_line, 0); // Enable motor (active LOW)
+        gpiod_line_set_value(dir_line, dir == FORWARD ? 1 : 0); // Set direction
+        std::this_thread::sleep_for(std::chrono::microseconds(100)); // allow DIR line to settle
 
-        // Report status to server
+        // Step
+        pulseStepPin(step_line, steps);
+
+        gpiod_line_set_value(enable_line, 1); // Optionally disable motor
+
         std::cout << "SUCCESS: Moved " << steps << " steps in " << direction_str << " direction" << std::endl;
         std::cout << "DONE" << std::endl;
+        std::cout.flush();
     }
 
-    bcm2835_gpio_write(ENABLE_PIN, HIGH);  // Ensure motor is disabled before exit
-    bcm2835_close();
+    gpiod_chip_close(chip);
     return 0;
 }

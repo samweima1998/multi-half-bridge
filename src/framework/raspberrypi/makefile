@@ -62,14 +62,29 @@ $(BUILD_DIR)/%.o: $(WRAPPER_DIR)/%.cpp
 	@mkdir -p $(@D)
 	@g++ -c $(CXXFLAGS) -o $@ $< $(CXX_INC)
 
-$(EXAMPLES): $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ)
+# GPIO_INC_DIR = /usr/include
+# GPIO_LIB_DIR = /usr/lib
+
+# Default build rule for most examples
+$(filter-out stepperMotorGPIO, $(EXAMPLES)): $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ)
 	@g++ -c $(CXXFLAGS) -o $(BUILD_DIR)/$(@F).o examples/$(@F).cpp $(CXX_INC)
 ifeq ($(PCAP), 0)
-	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) -I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835
+	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) \
+	-I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835
 else
-	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) -I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835 -lcap
+	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) \
+	-I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835 -lcap
 	@sudo setcap cap_sys_rawio+ep $(BUILD_DIR)/$(@F)
 endif
+
+# Special rule for stepperMotorGPIO using libgpiod instead of bcm2835
+examples/stepperMotorGPIO:
+	@g++ -o $(BUILD_DIR)/stepperMotorGPIO examples/stepperMotorGPIO.cpp \
+	-I/usr/include -L/usr/lib/arm-linux-gnueabihf -lgpiod
+
+
+
+
 
 
 clean:
