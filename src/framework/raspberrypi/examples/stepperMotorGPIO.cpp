@@ -6,7 +6,7 @@
 #include <chrono>
 
 #define CHIP_NAME "gpiochip0" // Typical on Raspberry Pi
-#define DIR_PIN 25
+#define DIR_PIN 16
 #define STEP_PIN 6
 #define ENABLE_PIN 5
 
