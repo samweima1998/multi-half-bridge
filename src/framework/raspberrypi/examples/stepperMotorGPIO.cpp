@@ -4,6 +4,8 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <csignal>
+#include <cstdlib>
 
 #define CHIP_NAME "gpiochip0" // Typical on Raspberry Pi
 #define DIR_PIN 16
@@ -11,6 +13,12 @@
 #define ENABLE_PIN 5
 
 enum Direction { FORWARD, BACKWARD };
+
+// Global for signal handler access
+gpiod_chip* chip = nullptr;
+gpiod_line* dir_line = nullptr;
+gpiod_line* step_line = nullptr;
+gpiod_line* enable_line = nullptr;
 
 void pulseStepPin(gpiod_line* step_line, int steps) {
     for (int i = 0; i < steps; ++i) {
@@ -22,28 +30,28 @@ void pulseStepPin(gpiod_line* step_line, int steps) {
 }
 
 int main() {
-
     // Set up libgpiod chip and lines
-    gpiod_chip* chip = gpiod_chip_open_by_name(CHIP_NAME);
+    chip = gpiod_chip_open_by_name(CHIP_NAME);
     if (!chip) {
         std::cerr << "ERROR: Failed to open GPIO chip" << std::endl;
         return 1;
     }
 
-    gpiod_line* dir_line = gpiod_chip_get_line(chip, DIR_PIN);
-    gpiod_line* step_line = gpiod_chip_get_line(chip, STEP_PIN);
-    gpiod_line* enable_line = gpiod_chip_get_line(chip, ENABLE_PIN);
+    dir_line = gpiod_chip_get_line(chip, DIR_PIN);
+    step_line = gpiod_chip_get_line(chip, STEP_PIN);
+    enable_line = gpiod_chip_get_line(chip, ENABLE_PIN);
 
     if (!dir_line || !step_line || !enable_line) {
         std::cerr << "ERROR: Failed to access one or more GPIO lines" << std::endl;
+        gpiod_chip_close(chip);
         return 1;
     }
 
-    // Request all lines as outputs
     if (gpiod_line_request_output(dir_line, "stepper", 0) ||
         gpiod_line_request_output(step_line, "stepper", 0) ||
         gpiod_line_request_output(enable_line, "stepper", 1)) {
         std::cerr << "ERROR: Failed to request GPIO lines as outputs" << std::endl;
+        gpiod_chip_close(chip);
         return 1;
     }
 
@@ -74,23 +82,22 @@ int main() {
             std::cout.flush();
             continue;
         }
+
         std::cout << "Got line: \"" << direction_str << "\"" << std::endl;
         std::cout.flush();
 
-        gpiod_line_set_value(enable_line, 0); // Enable motor (active LOW)
-        gpiod_line_set_value(dir_line, dir == FORWARD ? 1 : 0); // Set direction
-        std::this_thread::sleep_for(std::chrono::microseconds(100)); // allow DIR line to settle
-
-        // Step
+        gpiod_line_set_value(enable_line, 0);
+        gpiod_line_set_value(dir_line, dir == FORWARD ? 1 : 0);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
         pulseStepPin(step_line, steps);
-
-        gpiod_line_set_value(enable_line, 1); // Optionally disable motor
+        gpiod_line_set_value(enable_line, 1);
 
         std::cout << "SUCCESS: Moved " << steps << " steps in " << direction_str << " direction" << std::endl;
         std::cout << "DONE" << std::endl;
         std::cout.flush();
     }
 
+    // Final cleanup
     gpiod_chip_close(chip);
     return 0;
 }

@@ -11,6 +11,7 @@
 
 int main()
 {
+    
     // Initialize the controller for all chip select pins
     uint8_t csPins[] = {TLE94112_PIN_CS0, TLE94112_PIN_CS1, TLE94112_PIN_CS2, TLE94112_PIN_CS3,
                         TLE94112_PIN_CS4, TLE94112_PIN_CS5, TLE94112_PIN_CS6, TLE94112_PIN_CS7};
@@ -48,6 +49,7 @@ int main()
         std::cerr << "ERROR: Failed to initialize bcm2835" << std::flush;
         return 1;
     }
+
     std::string input;
     while (std::getline(std::cin, input)) // Read commands from stdin
     {
@@ -98,7 +100,6 @@ int main()
                 std::cout << "ERROR: Invalid state or half-bridge pin in pair: " << pair << "\nEND\n"
                           << std::flush;
                 error = true;
-                bcm2835_gpio_write(4, LOW);
                 break;
             }
 
@@ -111,17 +112,16 @@ int main()
         {
             std::cout << "SUCCESS: Command processed for CS" << csPinIndex << "\nEND\n"
                       << std::flush;
-            bcm2835_gpio_write(4, HIGH);
         }
         controllers[csPinIndex].timer->delayMilli(1); /*! \brief time in milliseconds to wait for chipselect signal raised */
     }
 
     std::cout << "SHUTDOWN\n"
               << std::flush;
-
     for (int i = 0; i < 8; i++)
     {
         controllers[i].end();
     }
+    bcm2835_close();
     return 0;
 }
