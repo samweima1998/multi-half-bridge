@@ -70,10 +70,10 @@ $(filter-out stepperMotorGPIO, $(EXAMPLES)): $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER
 	@g++ -c $(CXXFLAGS) -o $(BUILD_DIR)/$(@F).o examples/$(@F).cpp $(CXX_INC)
 ifeq ($(PCAP), 0)
 	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) \
-	-I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835
+	-I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835 -pthread
 else
 	@g++ $(CXXFLAGS) -o $(BUILD_DIR)/$(@F) $(BUILD_DIR)/$(@F).o $(CORELIB_OBJ) $(PAL_OBJ) $(WRAPPER_OBJ) \
-	-I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835 -lcap
+	-I$(SYS_INC_DIR) -L$(SYS_LIB_DIR) -lbcm2835 -lcap -pthread
 	@sudo setcap cap_sys_rawio+ep $(BUILD_DIR)/$(@F)
 endif
 
