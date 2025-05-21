@@ -3,3 +3,4 @@ For the sake of clarity, the following packages were removed compared to the ori
 1. Various C++ examples
 2. All python examples
 3. Arduino, Modustoolbox, Wiced-43xxx files
+4. CMake files
