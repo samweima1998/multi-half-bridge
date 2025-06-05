@@ -71,9 +71,12 @@ async def receive_dots(batch: DotBatch):
 
     async with send_dots_lock:
         # Define chip wiring (12 indexes each, ordered by physical layout)
-        cs1_array = [23, 22, 21, 28, 27, 26, 32, 31, 30, 35, 34, 33]
-        cs2_array = [29, 25, 20, 24, 19, 13, 18, 12, 6, 11, 5, 0]
-        cs3_array = [1, 7, 14, 2, 8, 15, 3, 9, 16, 4, 10, 17]
+        # cs1_array = [23, 22, 21, 28, 27, 26, 32, 31, 30, 35, 34, 33]
+        cs1_array = [26, 32, 33, 23, 27, 22, 28, 31, 21, 34, 35, 30]
+        # cs2_array = [29, 25, 20, 24, 19, 13, 18, 12, 6, 11, 5, 0]
+        cs2_array = [13, 18, 0, 29, 19, 25, 24, 12, 20, 5, 11, 6]
+        # cs3_array = [1, 7, 14, 2, 8, 15, 3, 9, 16, 4, 10, 17]
+        cs3_array = [15, 3, 17, 1, 8, 7, 2, 9, 14, 10, 4, 16]
 
         chip_for_index = {idx: 1 for idx in cs1_array}
         chip_for_index.update({idx: 2 for idx in cs2_array})
@@ -84,6 +87,8 @@ async def receive_dots(batch: DotBatch):
             logging.info(f"Received dot list {dot_list}.")
 
             chip_dots = {1: {}, 2: {}, 3: {}}
+            # Define the mapping
+            number_map = {1: 9, 2: 6, 3: 4, 4: 1, 5: 5, 6: 7}
             for dot in batch.dots:
                 chip = chip_for_index.get(dot.index)
                 if chip == 1:
@@ -92,6 +97,9 @@ async def receive_dots(batch: DotBatch):
                     dot.number += 4
                 if dot.number > 6:
                     dot.number -= 6
+                # Apply the mapping
+                if dot.number in number_map:
+                    dot.number = number_map[dot.number]
                 if chip:
                     chip_dots[chip][dot.index] = dot.number
 
@@ -134,25 +142,25 @@ async def receive_dots(batch: DotBatch):
             #         })
             #         await result_future
 
-            # Send setup
-            for chip in (1, 2, 3):
-                cs_pin = str(chip)
-                result_future = asyncio.get_running_loop().create_future()
-                await command_queue.put({
-                    "cs_pin": cs_pin,
-                    "args": "1,1 1,2 1,3 1,4 1,5 1,6 1,7 1,8 1,9 1,10 1,11 1,12",
-                    "result": result_future
-                })
-                await result_future            
-            for chip in (4,4):
-                cs_pin = str(chip)
-                result_future = asyncio.get_running_loop().create_future()
-                await command_queue.put({
-                    "cs_pin": cs_pin,
-                    "args": "2,1 2,2 2,3 2,4 2,5 2,6 2,7 2,8 2,9 2,10 2,11 2,12",
-                    "result": result_future
-                })
-                await result_future
+            # # Send setup
+            # for chip in (1, 2, 3):
+            #     cs_pin = str(chip)
+            #     result_future = asyncio.get_running_loop().create_future()
+            #     await command_queue.put({
+            #         "cs_pin": cs_pin,
+            #         "args": "1,1 1,2 1,3 1,4 1,5 1,6 1,7 1,8 1,9 1,10 1,11 1,12",
+            #         "result": result_future
+            #     })
+            #     await result_future            
+            # for chip in (4,4):
+            #     cs_pin = str(chip)
+            #     result_future = asyncio.get_running_loop().create_future()
+            #     await command_queue.put({
+            #         "cs_pin": cs_pin,
+            #         "args": "2,1 2,2 2,3 2,4 2,5 2,6 2,7 2,8 2,9 2,10 2,11 2,12",
+            #         "result": result_future
+            #     })
+            #     await result_future
 
             # Stepper move FORWARD
             result_future2 = asyncio.get_running_loop().create_future()
