@@ -87,34 +87,34 @@ async def receive_dots(batch: DotBatch):
             logging.info(f"Received dot list {dot_list}.")
 
             chip_dots = {1: {}, 2: {}, 3: {}}
-            # Define the mapping
-            number_map = {1: 9, 2: 6, 3: 4, 4: 1, 5: 5, 6: 7}
+            # # Define the mapping
+            # number_map = {1: 9, 2: 6, 3: 4, 4: 1, 5: 5, 6: 7}
             for dot in batch.dots:
                 chip = chip_for_index.get(dot.index)
                 if chip == 1:
                     dot.number += 2
-                elif chip == 2:
+                elif chip == 3:
                     dot.number += 4
                 if dot.number > 6:
                     dot.number -= 6
-                # Apply the mapping
-                if dot.number in number_map:
-                    dot.number = number_map[dot.number]
+                # # Apply the mapping
+                # if dot.number in number_map:
+                #     dot.number = number_map[dot.number]
                 if chip:
                     chip_dots[chip][dot.index] = dot.number
 
             processed_list = [dot.model_dump() for dot in batch.dots]
             logging.info(f"Processed dot list {json.dumps(processed_list)}.")
 
-            # Stepper move BACKWARD
-            result_future1 = asyncio.get_running_loop().create_future()
-            await stepper_queue.put({
-                "direction": "BACKWARD"[:],
-                "steps": int(20000),
-                "result": result_future1
-            })
-            await result_future1
-            logging.info("Stepper BACKWARD complete.")
+            # # Stepper move BACKWARD
+            # result_future1 = asyncio.get_running_loop().create_future()
+            # await stepper_queue.put({
+            #     "direction": "BACKWARD"[:],
+            #     "steps": int(20000),
+            #     "result": result_future1
+            # })
+            # await result_future1
+            # logging.info("Stepper BACKWARD complete.")
 
             # Generate dynamic args
             chip_map = {1: cs1_array, 2: cs2_array, 3: cs3_array}
@@ -129,48 +129,73 @@ async def receive_dots(batch: DotBatch):
                         arg_parts.append(f"{value},{pos}")
                     chip_args[chip][num] = " ".join(arg_parts)
 
-            # # Send programming commands
-            # for chip in (1, 2, 3):
-            #     cs_pin = str(chip)
-            #     for num in range(1, 7):
-            #         args = chip_args[chip][num]
-            #         result_future = asyncio.get_running_loop().create_future()
-            #         await command_queue.put({
-            #             "cs_pin": cs_pin,
-            #             "args": args,
-            #             "result": result_future
-            #         })
-            #         await result_future
+            args_on_map = {
+                1: "2,9",
+                2: "2,6",
+                3: "2,4",
+                4: "2,1",
+                5: "2,5",
+                6: "2,7"
+            }
+            args_off_map = {
+                1: "0,9",
+                2: "0,6",
+                3: "0,4",
+                4: "0,1",
+                5: "0,5",
+                6: "0,7"
+            }
+            # Send programming commands
+            for num in range(1, 7):
+                for chip in (1, 2, 3):
+                    cs_pin = str(chip)
+                    args = chip_args[chip][num]
+                    result_future = asyncio.get_running_loop().create_future()
+                    await command_queue.put({
+                        "cs_pin": cs_pin,
+                        "args": args,
+                        "result": result_future
+                    })
+                    await result_future
+                                     
+                cs_pin = "4"
+                result_future = asyncio.get_running_loop().create_future()
+                await command_queue.put({
+                    "cs_pin": cs_pin,
+                    "args": args_on_map[num],
+                    "result": result_future
+                })
+                await result_future
 
-            # # Send setup
-            # for chip in (1, 2, 3):
-            #     cs_pin = str(chip)
-            #     result_future = asyncio.get_running_loop().create_future()
-            #     await command_queue.put({
-            #         "cs_pin": cs_pin,
-            #         "args": "1,1 1,2 1,3 1,4 1,5 1,6 1,7 1,8 1,9 1,10 1,11 1,12",
-            #         "result": result_future
-            #     })
-            #     await result_future            
-            # for chip in (4,4):
-            #     cs_pin = str(chip)
-            #     result_future = asyncio.get_running_loop().create_future()
-            #     await command_queue.put({
-            #         "cs_pin": cs_pin,
-            #         "args": "2,1 2,2 2,3 2,4 2,5 2,6 2,7 2,8 2,9 2,10 2,11 2,12",
-            #         "result": result_future
-            #     })
-            #     await result_future
+                await asyncio.sleep(0.2)
 
-            # Stepper move FORWARD
-            result_future2 = asyncio.get_running_loop().create_future()
-            await stepper_queue.put({
-                "direction": "FORWARD"[:],
-                "steps": int(20000),
-                "result": result_future2
-            })
-            await result_future2
-            logging.info("Stepper FORWARD complete.")
+                result_future = asyncio.get_running_loop().create_future()
+                await command_queue.put({
+                    "cs_pin": cs_pin,
+                    "args": args_off_map[num],
+                    "result": result_future
+                })
+                await result_future
+
+            for chip in (4,4):
+                cs_pin = str(chip)
+                result_future = asyncio.get_running_loop().create_future()
+                await command_queue.put({
+                    "cs_pin": cs_pin,
+                    "args": "0,1 0,4 0,5 0,6 0,7 0,9",
+                    "result": result_future
+                })
+                await result_future
+
+            # # Stepper move FORWARD
+            # result_future2 = asyncio.get_running_loop().create_future()
+            # await stepper_queue.put({
+            #     "direction": "FORWARD"[:],
+            #     "steps": int(20000),
+            #     "result": result_future2
+            # })
+            # await result_future2
+            # logging.info("Stepper FORWARD complete.")
 
             # # Send cleanup
             # for chip in (1, 2, 3):
