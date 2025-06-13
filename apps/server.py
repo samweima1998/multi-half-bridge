@@ -52,7 +52,7 @@ shutdown_flag = False
 # Path to the control executable
 current_file_path = Path(__file__).resolve()
 # control_executable = current_file_path.parent.parent / "build" / "control"
-control_executable = current_file_path.parent.parent / "build" / "patterControl"
+control_executable = current_file_path.parent.parent / "build" / "patternControl"
 stepper_executable = current_file_path.parent.parent / "build" / "stepperMotorGPIO"
 
 class DotData(BaseModel):
@@ -168,7 +168,7 @@ async def receive_dots(batch: DotBatch):
                 })
                 await result_future
 
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.2) # Not needed for patternControl.cpp, but kept in for safe compatibility with control.cpp
 
                 result_future = asyncio.get_running_loop().create_future()
                 await command_queue.put({
@@ -178,9 +178,9 @@ async def receive_dots(batch: DotBatch):
                 })
                 await result_future
 
-            await command_queue.put({
+            await command_queue.put(
                 "START"
-            })
+            )
 
             # Stepper move FORWARD
             result_future2 = asyncio.get_running_loop().create_future()
@@ -192,20 +192,9 @@ async def receive_dots(batch: DotBatch):
             await result_future2
             logging.info("Stepper FORWARD complete.")
 
-            await command_queue.put({
+            await command_queue.put(
                 "STOP"
-            })
-
-            # # Send cleanup
-            # for chip in (1, 2, 3):
-            #     cs_pin = str(chip)
-            #     result_future = asyncio.get_running_loop().create_future()
-            #     await command_queue.put({
-            #         "cs_pin": cs_pin,
-            #         "args": "0,1 0,2 0,3 0,4 0,5 0,6 0,7 0,8 0,9 0,10 0,11 0,12",
-            #         "result": result_future
-            #     })
-            #     await result_future
+            )
 
             return {"status": "success", "dots": processed_list}
 
@@ -248,25 +237,42 @@ async def command_processor():
                     # Special case for "START" or "STOP"
                     if isinstance(command, str) and command in ("START", "STOP"):
                         command_input = f"{command}\n"
+                        process.stdin.write(command_input.encode())
+                        await process.stdin.drain()
+
+                        # Read and discard output lines until END
+                        output_lines = []
+                        while True:
+                            line = await process.stdout.readline()
+                            if not line:
+                                break
+                            decoded = line.decode().strip()
+                            if decoded == "END":
+                                break
+                            output_lines.append(decoded)
+                        
+                        # Log for visibility
+                        logging.info(f"{command} command output:\n" + "\n".join(output_lines))
+
                     else:
+                        # Normal dictionary-based command
                         command_input = f"{command['cs_pin']} {command['args']}\n"
+                        process.stdin.write(command_input.encode())
+                        await process.stdin.drain()
 
-                    process.stdin.write(command_input.encode())
-                    await process.stdin.drain()
+                        output_lines = []
+                        while True:
+                            line = await process.stdout.readline()
+                            if not line:
+                                break
+                            decoded = line.decode().strip()
+                            if decoded == "END":
+                                break
+                            output_lines.append(decoded)
 
+                        full_output = "\n".join(output_lines)
+                        command['result'].set_result(full_output)
 
-                    output_lines = []
-                    while True:
-                        line = await process.stdout.readline()
-                        if not line:
-                            break
-                        decoded = line.decode().strip()
-                        if decoded == "END":
-                            break
-                        output_lines.append(decoded)
-
-                    full_output = "\n".join(output_lines)
-                    command['result'].set_result(full_output)
                 except asyncio.TimeoutError:
                     continue
                 except Exception as e:
