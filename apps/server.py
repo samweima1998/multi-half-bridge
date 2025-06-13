@@ -51,7 +51,8 @@ shutdown_flag = False
 
 # Path to the control executable
 current_file_path = Path(__file__).resolve()
-control_executable = current_file_path.parent.parent / "build" / "control"
+# control_executable = current_file_path.parent.parent / "build" / "control"
+control_executable = current_file_path.parent.parent / "build" / "patterControl"
 stepper_executable = current_file_path.parent.parent / "build" / "stepperMotorGPIO"
 
 class DotData(BaseModel):
@@ -106,15 +107,15 @@ async def receive_dots(batch: DotBatch):
             processed_list = [dot.model_dump() for dot in batch.dots]
             logging.info(f"Processed dot list {json.dumps(processed_list)}.")
 
-            # # Stepper move BACKWARD
-            # result_future1 = asyncio.get_running_loop().create_future()
-            # await stepper_queue.put({
-            #     "direction": "BACKWARD"[:],
-            #     "steps": int(20000),
-            #     "result": result_future1
-            # })
-            # await result_future1
-            # logging.info("Stepper BACKWARD complete.")
+            # Stepper move BACKWARD
+            result_future1 = asyncio.get_running_loop().create_future()
+            await stepper_queue.put({
+                "direction": "BACKWARD"[:],
+                "steps": int(20000),
+                "result": result_future1
+            })
+            await result_future1
+            logging.info("Stepper BACKWARD complete.")
 
             # Generate dynamic args
             chip_map = {1: cs1_array, 2: cs2_array, 3: cs3_array}
@@ -177,25 +178,23 @@ async def receive_dots(batch: DotBatch):
                 })
                 await result_future
 
-            for chip in (4,4):
-                cs_pin = str(chip)
-                result_future = asyncio.get_running_loop().create_future()
-                await command_queue.put({
-                    "cs_pin": cs_pin,
-                    "args": "0,1 0,4 0,5 0,6 0,7 0,9",
-                    "result": result_future
-                })
-                await result_future
+            await command_queue.put({
+                "START"
+            })
 
-            # # Stepper move FORWARD
-            # result_future2 = asyncio.get_running_loop().create_future()
-            # await stepper_queue.put({
-            #     "direction": "FORWARD"[:],
-            #     "steps": int(20000),
-            #     "result": result_future2
-            # })
-            # await result_future2
-            # logging.info("Stepper FORWARD complete.")
+            # Stepper move FORWARD
+            result_future2 = asyncio.get_running_loop().create_future()
+            await stepper_queue.put({
+                "direction": "FORWARD"[:],
+                "steps": int(20000),
+                "result": result_future2
+            })
+            await result_future2
+            logging.info("Stepper FORWARD complete.")
+
+            await command_queue.put({
+                "STOP"
+            })
 
             # # Send cleanup
             # for chip in (1, 2, 3):
@@ -233,14 +232,28 @@ async def command_processor():
 
             while not shutdown_flag:
                 try:
-                    command = await asyncio.wait_for(command_queue.get(), timeout=0.1)
+                    # command = await asyncio.wait_for(command_queue.get(), timeout=0.1)
                     
+                    # if process.returncode is not None:
+                    #     raise RuntimeError("Subprocess terminated before executing command.")
+                    
+                    # command_input = f"{command['cs_pin']} {command['args']}\n"
+                    # process.stdin.write(command_input.encode())
+                    # await process.stdin.drain()
+                    command = await asyncio.wait_for(command_queue.get(), timeout=0.1)
+
                     if process.returncode is not None:
                         raise RuntimeError("Subprocess terminated before executing command.")
 
-                    command_input = f"{command['cs_pin']} {command['args']}\n"
+                    # Special case for "START" or "STOP"
+                    if isinstance(command, str) and command in ("START", "STOP"):
+                        command_input = f"{command}\n"
+                    else:
+                        command_input = f"{command['cs_pin']} {command['args']}\n"
+
                     process.stdin.write(command_input.encode())
                     await process.stdin.drain()
+
 
                     output_lines = []
                     while True:
