@@ -25,7 +25,7 @@ sudo apt-get update
 
 sudo apt-get install git
 sudo apt-get install python3-pip
-
+sudo apt install libgpiod-dev
 git clone https://github.com/samweima1998/multi-half-bridge.git
 
 #Manually get and install bcm2835
