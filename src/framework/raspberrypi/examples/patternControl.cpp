@@ -47,10 +47,6 @@ void executePattern(std::vector<Tle94112Rpi> &controllers, Tle94112::HalfBridge 
                         controllers[cs].cs->disable();
                         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                         controllers[cs].cs->enable();
-                        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-                        controllers[cs].cs->disable();
-                        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-                        controllers[cs].cs->enable();
                         continue;
                     }
 
