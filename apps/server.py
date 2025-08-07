@@ -170,13 +170,13 @@ async def receive_dots(batch: DotBatch):
 
                 await asyncio.sleep(0.2) # Not needed for patternControl.cpp, but kept in for safe compatibility with control.cpp
 
-                # result_future = asyncio.get_running_loop().create_future()
-                # await command_queue.put({
-                #     "cs_pin": cs_pin,
-                #     "args": args_off_map[num],
-                #     "result": result_future
-                # })
-                # await result_future
+                result_future = asyncio.get_running_loop().create_future()
+                await command_queue.put({
+                    "cs_pin": cs_pin,
+                    "args": args_off_map[num],
+                    "result": result_future
+                })
+                await result_future
 
             await command_queue.put(
                 "START"
