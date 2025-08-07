@@ -57,14 +57,14 @@ int main(int argc, char const *argv[])
   {
     for (int i = 0; i < 8; i++){
     // Communicate with TLE94112 to get the status register SYS_DIAG1 (default)
-    uint8_t status = controllers[i].getSysDiagnosis();
+    uint8_t status = controller[i].getSysDiagnosis();
     printf("Status register SYS_DIAG1: 0x%02X\n", status);
 
     /**
      * The SPI error flag shows if a SPI protocol
      * error is detected.
     */
-    if (status & controllers[i].TLE_SPI_ERROR)
+    if (status & controller[i].TLE_SPI_ERROR)
     {
       printf("SPI error detected!\n");
       // Handle the SPI error here.
@@ -79,7 +79,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controllers[i].TLE_UNDER_VOLTAGE)
+    if (status & controller[i].TLE_UNDER_VOLTAGE)
     {
       printf("Under voltage detected!\n");
       // Handle the under voltage error here.
@@ -94,7 +94,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controllers[i].TLE_OVER_VOLTAGE)
+    if (status & controller[i].TLE_OVER_VOLTAGE)
     {
       printf("Over voltage detected!\n");
       // Handle the over voltage error here.
@@ -109,7 +109,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controllers[i].TLE_POWER_ON_RESET)
+    if (status & controller[i].TLE_POWER_ON_RESET)
     {
       printf("Power on reset detected!\n");
       // Handle the power on reset here.
@@ -123,7 +123,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controllers[i].TLE_TEMP_WARNING)
+    if (status & controller[i].TLE_TEMP_WARNING)
     {
       printf("Junction temperature above pre-warning threshold!\n");
       // Handle the temperature warning here.
@@ -139,7 +139,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controllers[i].TLE_TEMP_SHUTDOWN)
+    if (status & controller[i].TLE_TEMP_SHUTDOWN)
     {
       printf("Junction temperature above shutdown threshold!\n");
       // Handle the temperature shutdown here.
@@ -157,7 +157,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controllers[i].TLE_LOAD_ERROR)
+    if (status & controller[i].TLE_LOAD_ERROR)
     {
       printf("Load error detected!\n");
       // Handle the Load error here.
@@ -207,7 +207,7 @@ int main(int argc, char const *argv[])
     printf("\n---\n\n");
 
     // Clear all error flags (will clear latched errors if they do not persist)
-    controllers[i].clearErrors();
+    controller[i].clearErrors();
   }
     // Wait for 5 seconds
     delay(5000);
