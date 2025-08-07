@@ -44,6 +44,9 @@ void executePattern(std::vector<Tle94112Rpi> &controllers, Tle94112::HalfBridge 
                     if (!std::getline(singlePair, stateStr, ',') || !std::getline(singlePair, hbStr))
                     {
                         std::cerr << "ERROR parsing pair: " << pair << std::endl;
+                        controllers[cs].cs->disable();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                        controllers[cs].cs->enable();
                         continue;
                     }
 
