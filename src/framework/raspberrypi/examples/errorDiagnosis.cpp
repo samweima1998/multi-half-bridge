@@ -55,6 +55,7 @@ int main(int argc, char const *argv[])
 
     // Communicate with TLE94112 to get the status register SYS_DIAG1 (default)
     uint8_t status = controller.getSysDiagnosis();
+    printf("Status register SYS_DIAG1: 0x%02X\n", status);
 
     /**
      * The SPI error flag shows if a SPI protocol
