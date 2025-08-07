@@ -14,6 +14,7 @@
 
 /* Infineon library for multi half bridge */
 #include "tle94112-rpi.hpp"
+#include "tle94112-platf-rpi.hpp"
 #include "tle94112-motor.hpp"
 
 /* 3rd party libraries for this example */
