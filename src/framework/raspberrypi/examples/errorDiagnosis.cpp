@@ -23,47 +23,45 @@
 int main(int argc, char const *argv[])
 {
 
-    uint8_t csPins[] = {
-        TLE94112_PIN_CS0, TLE94112_PIN_CS1, TLE94112_PIN_CS2, TLE94112_PIN_CS3,
-        TLE94112_PIN_CS4, TLE94112_PIN_CS5, TLE94112_PIN_CS6, TLE94112_PIN_CS7};
+  // Tle94112 Object on Shield 1
+  Tle94112Rpi controller;
 
-    Tle94112Rpi controllers[8] = {
-        Tle94112Rpi(csPins[0]), Tle94112Rpi(csPins[1]), Tle94112Rpi(csPins[2]), Tle94112Rpi(csPins[3]),
-        Tle94112Rpi(csPins[4]), Tle94112Rpi(csPins[5]), Tle94112Rpi(csPins[6]), Tle94112Rpi(csPins[7])};
+  // Tle94112Motor Objects on controller
+  Tle94112Motor motor(controller);
 
-    Tle94112::HBState states[] = {Tle94112::TLE_FLOATING, Tle94112::TLE_LOW, Tle94112::TLE_HIGH};
-    Tle94112::HalfBridge hbPins[] = {
-        Tle94112::TLE_HB1, Tle94112::TLE_HB2, Tle94112::TLE_HB3, Tle94112::TLE_HB4,
-        Tle94112::TLE_HB5, Tle94112::TLE_HB6, Tle94112::TLE_HB7, Tle94112::TLE_HB8,
-        Tle94112::TLE_HB9, Tle94112::TLE_HB10, Tle94112::TLE_HB11, Tle94112::TLE_HB12};
+  // Enable MotorController on all Shields and Motors
+  // Note: Required to be done before starting to configure the motor
+  // controller is set to default CS0 pin
+  controller.begin();
 
-    for (int i = 0; i < 8; i++)
-        controllers[i].begin();
-    for (int i = 0; i < 8; i++)
-        controllers[i].cs->init();
-    for (int i = 0; i < 8; i++)
-    {
-        controllers[i].clearErrors();
-        for (int hbPinIndex = 0; hbPinIndex < 12; hbPinIndex++)
-        {
-            controllers[i].configHB(hbPins[hbPinIndex], states[0], Tle94112::TLE_NOPWM);
-        }
-    }
+  // Connect a motor to HB1 high-side and HB5 low-side
+  // With two combined half bridges the motor can have up to 1.8 A
+  motor.initConnector(motor.HIGHSIDE, controller.TLE_NOPWM, controller.TLE_HB1, controller.TLE_NOHB, controller.TLE_NOHB, controller.TLE_NOHB);
+  motor.initConnector(motor.LOWSIDE, controller.TLE_NOPWM, controller.TLE_HB5, controller.TLE_NOHB, controller.TLE_NOHB, controller.TLE_NOHB);
+
+  // start the motor controller
+  motor.begin();
+
+  // run the motor
+  motor.start(255);
+
+  // Clear all errors to start clean
+  controller.clearErrors();
 
   printf("Motor active, starting loop.\n\n");
 
   while (1)
   {
-    for (int i = 0; i < 8; i++){
+
     // Communicate with TLE94112 to get the status register SYS_DIAG1 (default)
-    uint8_t status = controller[i].getSysDiagnosis();
+    uint8_t status = controller.getSysDiagnosis();
     printf("Status register SYS_DIAG1: 0x%02X\n", status);
 
     /**
      * The SPI error flag shows if a SPI protocol
      * error is detected.
     */
-    if (status & controller[i].TLE_SPI_ERROR)
+    if (status & controller.TLE_SPI_ERROR)
     {
       printf("SPI error detected!\n");
       // Handle the SPI error here.
@@ -78,7 +76,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controller[i].TLE_UNDER_VOLTAGE)
+    if (status & controller.TLE_UNDER_VOLTAGE)
     {
       printf("Under voltage detected!\n");
       // Handle the under voltage error here.
@@ -93,7 +91,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controller[i].TLE_OVER_VOLTAGE)
+    if (status & controller.TLE_OVER_VOLTAGE)
     {
       printf("Over voltage detected!\n");
       // Handle the over voltage error here.
@@ -108,7 +106,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controller[i].TLE_POWER_ON_RESET)
+    if (status & controller.TLE_POWER_ON_RESET)
     {
       printf("Power on reset detected!\n");
       // Handle the power on reset here.
@@ -122,7 +120,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controller[i].TLE_TEMP_WARNING)
+    if (status & controller.TLE_TEMP_WARNING)
     {
       printf("Junction temperature above pre-warning threshold!\n");
       // Handle the temperature warning here.
@@ -138,7 +136,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controller[i].TLE_TEMP_SHUTDOWN)
+    if (status & controller.TLE_TEMP_SHUTDOWN)
     {
       printf("Junction temperature above shutdown threshold!\n");
       // Handle the temperature shutdown here.
@@ -156,7 +154,7 @@ int main(int argc, char const *argv[])
      * This error is latched and needs to be
      * cleared manually.
     */
-    if (status & controller[i].TLE_LOAD_ERROR)
+    if (status & controller.TLE_LOAD_ERROR)
     {
       printf("Load error detected!\n");
       // Handle the Load error here.
@@ -167,34 +165,34 @@ int main(int argc, char const *argv[])
       * which half-bridge. This can be red as follows:
       */
 
-      // // For each half bridge (0 is placeholder for no half bridge)
-      // for (uint8_t halfBridge = 1; halfBridge <= 12; halfBridge++)
-      // {
+      // For each half bridge (0 is placeholder for no half bridge)
+      for (uint8_t halfBridge = 1; halfBridge <= 12; halfBridge++)
+      {
 
-      //   // Read over-current status of this half bridge from chip
-      //   uint8_t oc = controller.getHBOverCurrent((Tle94112::HalfBridge)halfBridge);
+        // Read over-current status of this half bridge from chip
+        uint8_t oc = controller.getHBOverCurrent((Tle94112::HalfBridge)halfBridge);
 
-      //   // Check for an over-current error on the low-side of this half bridge
-      //   if (oc & controller.TLE_LOWSIDE)
-      //   {
-      //     printf("\tHB %u:\tOver-current detected in low-side switch.\n", halfBridge);
-      //   }
+        // Check for an over-current error on the low-side of this half bridge
+        if (oc & controller.TLE_LOWSIDE)
+        {
+          printf("\tHB %u:\tOver-current detected in low-side switch.\n", halfBridge);
+        }
 
-      //   // Check for an over-current error on the high-side of this half bridge
-      //   if (oc & controller.TLE_HIGHSIDE)
-      //   {
-      //     printf("\tHB %u:\tOver-current detected in high-side switch.\n", halfBridge);
-      //   }
+        // Check for an over-current error on the high-side of this half bridge
+        if (oc & controller.TLE_HIGHSIDE)
+        {
+          printf("\tHB %u:\tOver-current detected in high-side switch.\n", halfBridge);
+        }
 
-      //   // Read open load status of this half bridge from chip
-      //   uint8_t ol = controller.getHBOpenLoad((Tle94112::HalfBridge)halfBridge);
+        // Read open load status of this half bridge from chip
+        uint8_t ol = controller.getHBOpenLoad((Tle94112::HalfBridge)halfBridge);
 
-      //   // Check for an open load error in this half bridge
-      //   if (ol)
-      //   {
-      //     printf("\tHB %u:\tOpen load detected.\n", halfBridge);
-      //   }
-      // }
+        // Check for an open load error in this half bridge
+        if (ol)
+        {
+          printf("\tHB %u:\tOpen load detected.\n", halfBridge);
+        }
+      }
     }
 
     // If no error was found print a heartbeat message
@@ -206,8 +204,8 @@ int main(int argc, char const *argv[])
     printf("\n---\n\n");
 
     // Clear all error flags (will clear latched errors if they do not persist)
-    controller[i].clearErrors();
-  }
+    controller.clearErrors();
+
     // Wait for 5 seconds
     delay(5000);
   }
