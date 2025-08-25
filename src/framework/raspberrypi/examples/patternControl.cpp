@@ -109,6 +109,9 @@ int main()
 
     std::cout << "READY\n"
               << std::flush;
+    bcm2835_init();
+    bcm2835_spi_begin();
+    
     if (!bcm2835_init())
     {
         std::cerr << "ERROR: Failed to initialize bcm2835\n";
