@@ -138,6 +138,8 @@ async def receive_dots(batch: DotBatch):
                 5: "2,5",
                 6: "2,7"
             }
+            # 4 2,9 2,6 2,4 2,1 2,5 2,7
+            # 1 1,1 1,2 1,3 1,4 1,5 1,6 1,7 1,8 1,9 1,10 1,11 1,12
             args_off_map = {
                 1: "0,9",
                 2: "0,6",
@@ -146,6 +148,8 @@ async def receive_dots(batch: DotBatch):
                 5: "0,5",
                 6: "0,7"
             }
+            # 4 0,9 0,6 0,4 0,1 0,5 0,7
+            # 1 0,1 0,2 0,3 0,4 0,5 0,6 0,7 0,8 0,9 0,10 0,11 0,12
             # Send programming commands
             for num in range(1, 7):
                 for chip in (1, 2, 3):
