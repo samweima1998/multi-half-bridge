@@ -61,15 +61,15 @@ void executePattern(std::vector<Tle94112Rpi> &controllers, Tle94112::HalfBridge 
                 }
                 controllers[cs].timer->delayMilli(1);
             }
-            // ensure all half-bridges are set floating before delay
-            for (int i = 0; i < 8; i++)
-            {
-                for (int hbPinIndex = 0; hbPinIndex < 12; hbPinIndex++)
-                {
-                    controllers[i].configHB(hbPins[hbPinIndex], states[0], Tle94112::TLE_NOPWM);
-                }
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Cycle delay
+            // // ensure all half-bridges are set floating before delay
+            // for (int i = 0; i < 8; i++)
+            // {
+            //     for (int hbPinIndex = 0; hbPinIndex < 12; hbPinIndex++)
+            //     {
+            //         controllers[i].configHB(hbPins[hbPinIndex], states[0], Tle94112::TLE_NOPWM);
+            //     }
+            // }
+            // std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Cycle delay
         }
         else
         {
