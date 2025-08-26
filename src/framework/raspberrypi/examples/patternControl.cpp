@@ -53,7 +53,7 @@ void executePattern(std::vector<Tle94112Rpi> &controllers, Tle94112::HalfBridge 
                     if (state >= 0 && state <= 2 && hbPin >= 0 && hbPin <= 11)
                     {
                         controllers[cs].configChip(hbPins[hbPin], states[state], Tle94112::TLE_NOPWM);
-                        std::cout << "Command sent: " << cs << hbPin << state << std::endl;
+                        // std::cout << "Command sent: " << cs << hbPin << state << std::endl;
                     }
                     if (state ==2){
                         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -109,9 +109,9 @@ int main()
 
     std::cout << "READY\n"
               << std::flush;
-    bcm2835_init();
-    bcm2835_spi_begin();
-    
+    // bcm2835_init();
+    // bcm2835_spi_begin();
+
     if (!bcm2835_init())
     {
         std::cerr << "ERROR: Failed to initialize bcm2835\n";
