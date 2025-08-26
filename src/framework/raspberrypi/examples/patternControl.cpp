@@ -69,7 +69,7 @@ void executePattern(std::vector<Tle94112Rpi> &controllers, Tle94112::HalfBridge 
                     controllers[i].configHB(hbPins[hbPinIndex], states[0], Tle94112::TLE_NOPWM);
                 }
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Cycle delay
+            std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Cycle delay
         }
         else
         {
