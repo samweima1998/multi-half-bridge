@@ -56,7 +56,7 @@ void executePattern(std::vector<Tle94112Rpi> &controllers, Tle94112::HalfBridge 
                         // std::cout << "Command sent: " << cs << hbPin << state << std::endl;
                     }
                     if (state ==2){
-                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     }
                 }
                 controllers[cs].timer->delayMilli(1);
